@@ -100,16 +100,26 @@ service /api on libListener {
         if found.status != AVAILABLE {
             return <http:Conflict>{body: {message: "Asset " + assetTag + " is not AVAILABLE (current: " + found.status + ")."}};
         }
-        found.status = LOANED_OUT;
-        log:printInfo("Loaned out: " + assetTag);
+        // Books/equipment are LOANED_OUT when checked out; spaces (labs/meeting
+        // rooms) are booked and marked OCCUPIED instead.
+        if found.category == SPACE {
+            found.status = OCCUPIED;
+            log:printInfo("Booked: " + assetTag);
+        } else {
+            found.status = LOANED_OUT;
+            log:printInfo("Loaned out: " + assetTag);
+        }
         return found;
     }
 
     // POST /api/assets/{assetTag}/return
-    resource function post assets/[string assetTag]/'return() returns Asset|http:NotFound {
+    resource function post assets/[string assetTag]/'return() returns Asset|http:NotFound|http:Conflict {
         Asset? found = assetStore[assetTag];
         if found is () {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
+        }
+        if found.status != LOANED_OUT && found.status != OCCUPIED {
+            return <http:Conflict>{body: {message: "Asset " + assetTag + " is not currently loaned out or occupied (current: " + found.status + ")."}};
         }
         found.status = AVAILABLE;
         log:printInfo("Returned: " + assetTag);
@@ -287,6 +297,19 @@ service /api on libListener {
             return found;
         }
         return <http:NotFound>{body: {message: "Institution " + institutionId + " not found."}};
+    }
+
+    // PUT /api/institutions/{institutionId}
+    resource function put institutions/[string institutionId](@http:Payload Institution updatedInst) returns Institution|http:NotFound|http:BadRequest {
+        if !institutionStore.hasKey(institutionId) {
+            return <http:NotFound>{body: {message: "Institution " + institutionId + " not found."}};
+        }
+        if updatedInst.institutionId != institutionId {
+            return <http:BadRequest>{body: {message: "institutionId in body must match institutionId in URL."}};
+        }
+        institutionStore[institutionId] = updatedInst;
+        log:printInfo("Updated institution: " + institutionId);
+        return updatedInst;
     }
 
     // DELETE /api/institutions/{institutionId}
