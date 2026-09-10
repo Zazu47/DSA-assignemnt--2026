@@ -8,6 +8,12 @@ public enum Status {
     DISPOSED
 }
 
+public enum AssetCategory {
+    BOOK,
+    EQUIPMENT,
+    SPACE
+}
+
 public type Component record {|
     string compId;
     string name;
@@ -41,8 +47,19 @@ public type Asset record {|
     string institution;
     string site;
     Status status;
+    AssetCategory category = EQUIPMENT;
     string dateAcquired;
     Component[] components = [];
     Schedule[] schedules = [];
     WorkOrder[] workOrders = [];
 |};
+
+public type Institution record {|
+    string institutionId;
+    string name;
+    string[] sites = [];
+|};
+
+public type MessageResponse record {
+    string message;
+};
