@@ -4,6 +4,15 @@ import ballerina/time;
 
 listener http:Listener libListener = new (8080);
 
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: ["http://127.0.0.1:5500", "http://localhost:5500"],
+        allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowHeaders: ["Content-Type", "Accept"]
+    }
+}
+
+
 service /api on libListener {
 
     // ==================== ASSET CRUD ====================
