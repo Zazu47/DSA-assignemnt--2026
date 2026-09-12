@@ -1,0 +1,5 @@
+[package]
+org = "ministry_tourism"
+name = "rental_server"
+version = "0.1.0"
+distribution = "2201.12.7"
