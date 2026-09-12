@@ -5,7 +5,7 @@ package rental;
 service RentalService {
     rpc addProperty (AddPropertyRequest) returns (AddPropertyResponse);
     rpc createUsers (stream UserProfile) returns (CreateUsersResponse);
-    rpc updateProperty (UpdatePropertyRequest) returns (RentalProperty);
+    rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
     rpc removeProperty (RemovePropertyRequest) returns (RemovePropertyResponse);
     rpc listAvailableProperties (ListPropertiesRequest) returns (stream RentalProperty);
     rpc searchProperty (SearchPropertyRequest) returns (SearchPropertyResponse);
@@ -45,6 +45,12 @@ message UpdatePropertyRequest {
     optional string property_type = 5;
     optional double price_per_night = 6;
     optional string status = 7;
+}
+
+message UpdatePropertyResponse {
+    bool success = 1;
+    string message = 2;
+    RentalProperty property = 3;
 }
 
 message RemovePropertyRequest {
