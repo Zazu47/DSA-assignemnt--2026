@@ -1,5 +1,8 @@
 [package]
-org = "ministry_tourism"
+org = "i_am_relentle77"
 name = "rental_client"
 version = "0.1.0"
-distribution = "2201.12.7"
+distribution = "2201.13.6"
+
+[build-options]
+observabilityIncluded = true
