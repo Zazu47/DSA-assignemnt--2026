@@ -8,6 +8,8 @@ Due Date: 14 September 2026
 Team Members
 1. Zazuvirua Tjijombo 223049905
 2. Jimu Erol Halifeli 221042792
+3. Jayden Aljandro Claassen 224085832
+4. Benhard Amutse 224061887
 
 
 Overview

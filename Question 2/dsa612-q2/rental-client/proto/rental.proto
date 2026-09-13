@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package rental;
+
+// =====================================================
+// ENUMS
+// =====================================================
+
+enum PropertyStatus {
+  UNSPECIFIED = 0;
+  AVAILABLE = 1;
+  UNAVAILABLE = 2;
+}
+
+enum UserRole {
+  ROLE_UNSPECIFIED = 0;
+  HOST = 1;
+  GUEST = 2;
+}
+
+// =====================================================
+// PROPERTY MESSAGES
+// =====================================================
+
+message NewPropertyRequest {
+  string host_id = 1;
+  string name = 2;
+  string location = 3;
+  string property_type = 4;
+  double price_per_night = 5;
+  PropertyStatus status = 6;
+}
+
+message Property {
+  string property_id = 1;
+  string host_id = 2;
+  string name = 3;
+  string location = 4;
+  string property_type = 5;
+  double price_per_night = 6;
+  PropertyStatus status = 7;
+}
+
+message UpdatePropertyRequest {
+  string property_id = 1;
+  optional string name = 2;
+  optional string location = 3;
+  optional string property_type = 4;
+  optional double price_per_night = 5;
+  optional PropertyStatus status = 6;
+}
+
+message RemovePropertyRequest {
+  string property_id = 1;
+}
+
+message RemovePropertyResponse {
+  repeated Property properties = 1;
+}
+
+message SearchPropertyRequest {
+  string property_id = 1;
+}
+
+message SearchPropertyResponse {
+  bool found = 1;
+  optional Property property = 2;
+  string message = 3;
+}
+
+message ListPropertiesRequest {
+  optional string location = 1;
+  optional double min_price = 2;
+  optional double max_price = 3;
+}
+
+// =====================================================
+// USER MESSAGES
+// =====================================================
+
+message NewUserRequest {
+  string name = 1;
+  string email = 2;
+  UserRole role = 3;
+}
+
+message User {
+  string user_id = 1;
+  string name = 2;
+  string email = 3;
+  UserRole role = 4;
+}
+
+message CreateUsersResponse {
+  int32 users_created = 1;
+  repeated User users = 2;
+  string message = 3;
+}
+
+// =====================================================
+// BOOKING MESSAGES
+// =====================================================
+
+message BookPropertyRequest {
+  string property_id = 1;
+  string guest_id = 2;
+  string check_in_date = 3;
+  string check_out_date = 4;
+}
+
+message BookingRequest {
+  string request_id = 1;
+  string property_id = 2;
+  string guest_id = 3;
+  string check_in_date = 4;
+  string check_out_date = 5;
+  int64 created_at = 6;        // epoch seconds, used to expire abandoned cart entries
+}
+
+message BookPropertyResponse {
+  bool accepted = 1;
+  optional string request_id = 2;
+  string message = 3;
+}
+
+message ConfirmBookingRequest {
+  string request_id = 1;
+  string host_id = 2;
+}
+
+message Booking {
+  string booking_id = 1;
+  string property_id = 2;
+  string guest_id = 3;
+  string check_in_date = 4;
+  string check_out_date = 5;
+  double total_cost = 6;
+}
+
+message ConfirmBookingResponse {
+  bool success = 1;
+  optional Booking booking = 2;
+  string message = 3;
+}
+
+// =====================================================
+// SERVICE
+// =====================================================
+
+service RentalService {
+  rpc add_property(NewPropertyRequest) returns (Property);
+  rpc update_property(UpdatePropertyRequest) returns (Property);
+  rpc remove_property(RemovePropertyRequest) returns (RemovePropertyResponse);
+  rpc search_property(SearchPropertyRequest) returns (SearchPropertyResponse);
+  rpc list_available_properties(ListPropertiesRequest) returns (stream Property);
+  rpc create_users(stream NewUserRequest) returns (CreateUsersResponse);
+  rpc book_property(BookPropertyRequest) returns (BookPropertyResponse);
+  rpc confirm_booking(ConfirmBookingRequest) returns (ConfirmBookingResponse);
+}

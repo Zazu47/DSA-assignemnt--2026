@@ -8,6 +8,14 @@ public enum Status {
     DISPOSED
 }
 
+// Distinguishes books/equipment (LOANED_OUT when checked out) from
+// physical spaces like labs/meeting rooms (OCCUPIED when booked).
+public enum AssetCategory {
+    BOOK,
+    EQUIPMENT,
+    SPACE
+}
+
 public type Component record {|
     string compId;
     string name;
@@ -41,6 +49,7 @@ public type Asset record {|
     string institution;
     string site;
     Status status;
+    AssetCategory category = EQUIPMENT;
     string dateAcquired;
     Component[] components = [];
     Schedule[] schedules = [];
@@ -56,6 +65,10 @@ public type Institution record {|
 public type StatusUpdate record {|
     string status;
 |};
+
+public type MessageResponse record {
+    string message;
+};
 
 public type TaskUpdate record {|
     boolean completed;

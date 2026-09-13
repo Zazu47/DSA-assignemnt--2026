@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Library & Resource Management</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    margin: 0;
+    color: #f3ede2;
+    background:
+      linear-gradient(rgba(15, 18, 28, 0.78), rgba(15, 18, 28, 0.88)),
+      url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1920&q=80')
+      center/cover fixed no-repeat;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* Soft vignette to mimic the photographed corridor of lights */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 20%, rgba(255, 214, 150, 0.06), transparent 60%),
+                radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.55), transparent 70%);
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 2;
+    padding: 22px 32px 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    backdrop-filter: blur(6px);
+    background: linear-gradient(180deg, rgba(10,12,20,0.85), rgba(10,12,20,0.2));
+    border-bottom: 1px solid rgba(255, 210, 150, 0.12);
+  }
+  header h1 {
+    font-size: 20px;
+    margin: 0;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    background: linear-gradient(90deg, #ffd9a0, #fff3d6 60%, #ffd9a0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 26px rgba(255, 200, 120, 0.25);
+  }
+  header h1::before {
+    content: "";
+    display: inline-block;
+    width: 10px; height: 10px;
+    background: radial-gradient(circle, #ffe6b3, #ffb44a 60%, transparent 70%);
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: middle;
+    box-shadow: 0 0 14px #ffb44a, 0 0 26px rgba(255,180,74,0.7);
+  }
+  header input {
+    margin-left: auto;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 210, 150, 0.25);
+    background: rgba(20, 22, 30, 0.7);
+    color: #ffe9c7;
+    font-size: 13px;
+    width: 280px;
+    font-family: ui-monospace, monospace;
+  }
+  header input::placeholder { color: #b8a68a; }
+
+  nav {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    gap: 4px;
+    padding: 10px 32px 0;
+    flex-wrap: wrap;
+  }
+  nav button {
+    background: rgba(20, 22, 30, 0.55);
+    color: #d9cbaf;
+    border: 1px solid rgba(255, 210, 150, 0.15);
+    border-bottom: none;
+    padding: 10px 18px;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    font-size: 14px;
+    letter-spacing: 0.4px;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(8px);
+  }
+  nav button:hover { color: #ffe9c7; background: rgba(40, 34, 26, 0.7); }
+  nav button.active {
+    background: linear-gradient(180deg, rgba(60, 46, 28, 0.95), rgba(30, 25, 20, 0.95));
+    color: #ffe6b3;
+    font-weight: 600;
+    box-shadow: 0 -2px 14px rgba(255, 180, 74, 0.25);
+    border-color: rgba(255, 210, 150, 0.35);
+    border-bottom: 1px solid transparent;
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 22px 32px 60px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  .panel { display: none; animation: fadeUp 0.35s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card {
+    background: linear-gradient(180deg, rgba(26, 24, 22, 0.85), rgba(18, 17, 16, 0.9));
+    border: 1px solid rgba(255, 210, 150, 0.14);
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,225,180,0.05);
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+  }
+
+  h2 {
+    margin-top: 0;
+    font-size: 17px;
+    color: #ffe6b3;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h2::before {
+    content: "";
+    width: 4px; height: 18px;
+    background: linear-gradient(180deg, #ffc978, #a8691d);
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(255, 180, 74, 0.6);
+  }
+  h3 { font-size: 14px; color: #e2d3b6; margin: 16px 0 8px; letter-spacing: 0.3px; }
+
+  label { display: block; font-size: 12px; color: #b8a68a; margin: 8px 0 4px; letter-spacing: 0.4px; text-transform: uppercase; }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid rgba(255, 210, 150, 0.18);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: rgba(12, 12, 14, 0.7);
+    color: #f3ede2;
+    transition: border 0.15s ease, box-shadow 0.15s ease;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: rgba(255, 200, 120, 0.6);
+    box-shadow: 0 0 0 3px rgba(255, 200, 120, 0.12);
+  }
+  input::placeholder, textarea::placeholder { color: #7a6d5a; }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 180px; }
+
+  button.action {
+    background: linear-gradient(180deg, #d99a44, #a8691d);
+    color: #1a1408;
+    border: 1px solid rgba(255, 210, 150, 0.4);
+    padding: 9px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    margin-top: 10px;
+    transition: all 0.15s ease;
+    box-shadow: 0 3px 12px rgba(255, 160, 60, 0.25);
+  }
+  button.action:hover {
+    background: linear-gradient(180deg, #f0b35c, #c07b28);
+    box-shadow: 0 4px 18px rgba(255, 180, 74, 0.45);
+    transform: translateY(-1px);
+  }
+  button.danger {
+    background: linear-gradient(180deg, #b8443a, #832a22);
+    color: #fff2e2;
+    border-color: rgba(255, 130, 110, 0.4);
+    box-shadow: 0 3px 12px rgba(200, 60, 40, 0.25);
+  }
+  button.danger:hover {
+    background: linear-gradient(180deg, #d1544a, #9e3b2f);
+    box-shadow: 0 4px 18px rgba(220, 80, 60, 0.45);
+  }
+  button.secondary {
+    background: rgba(60, 55, 45, 0.85);
+    color: #e2d3b6;
+    border-color: rgba(255, 210, 150, 0.18);
+    box-shadow: none;
+  }
+  button.secondary:hover {
+    background: rgba(80, 72, 58, 0.95);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+  }
+  button.small { padding: 5px 12px; font-size: 12px; margin-top: 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin-top: 12px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 210, 150, 0.08);
+  }
+  th {
+    background: rgba(255, 210, 150, 0.04);
+    font-weight: 600;
+    color: #d9c4a0;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  tr:hover td { background: rgba(255, 210, 150, 0.035); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border: 1px solid transparent;
+  }
+  .AVAILABLE { background: rgba(34, 197, 94, 0.15); color: #86efac; border-color: rgba(34, 197, 94, 0.3); }
+  .LOANED_OUT { background: rgba(251, 191, 36, 0.15); color: #fcd34d; border-color: rgba(251, 191, 36, 0.3); }
+  .OCCUPIED { background: rgba(96, 165, 250, 0.15); color: #93c5fd; border-color: rgba(96, 165, 250, 0.3); }
+  .UNDER_MAINTENANCE { background: rgba(248, 113, 113, 0.15); color: #fca5a5; border-color: rgba(248, 113, 113, 0.3); }
+  .DISPOSED { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.3); }
+
+  .log {
+    margin-top: 14px;
+    background: rgba(6, 8, 12, 0.85);
+    color: #ffd9a0;
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    border: 1px solid rgba(255, 210, 150, 0.12);
+    box-shadow: inset 0 0 30px rgba(255, 160, 60, 0.05);
+  }
+  .log:empty { display: none; }
+
+  .muted { color: #8a7d66; font-size: 13px; font-style: italic; }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 6px 14px;
+    font-size: 14px;
+    padding: 14px 16px;
+    background: rgba(10, 10, 12, 0.5);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 210, 150, 0.08);
+  }
+  .detail-grid div:nth-child(odd) { color: #b8a68a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; align-self: center; }
+
+  .sub-list { margin: 8px 0 0 0; padding-left: 18px; font-size: 13px; color: #d9cbaf; list-style: "✦  "; }
+  .sub-list li { margin-bottom: 6px; }
+  .sub-list li::marker { color: #a8691d; }
+
+  .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .inline-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .inline-form > div { flex: 1; min-width: 140px; }
+
+  /* Custom scrollbar for the warm aesthetic */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a8691d, #6b4312);
+    border-radius: 5px;
+    border: 2px solid rgba(0,0,0,0.2);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #d99a44, #a8691d); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Library &amp; Resource Management</h1>
+  <input id="baseUrl" value="http://localhost:8080/api" title="API base URL" />
+</header>
+
+<nav>
+  <button data-panel="assets" class="active">Assets</button>
+  <button data-panel="overdue">Overdue</button>
+  <button data-panel="institutions">Institutions</button>
+</nav>
+
+<main>
+
+  <!-- ============================ ASSETS ============================ -->
+  <section class="panel active" id="panel-assets">
+
+    <div class="card">
+      <h2>Filter assets</h2>
+      <div class="inline-form">
+        <div>
+          <label>Institution</label>
+          <input id="filterInstitution" placeholder="e.g. UNAM" />
+        </div>
+        <div>
+          <label>Site</label>
+          <input id="filterSite" placeholder="e.g. Main Campus" />
+        </div>
+        <button class="action" onclick="loadAssets()">Search</button>
+        <button class="action secondary" onclick="clearAssetFilter()">Clear</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flex-between">
+        <h2>Assets</h2>
+        <button class="action small" onclick="toggleAddAsset()">+ New asset</button>
+      </div>
+
+      <div id="addAssetForm" style="display:none; border-top:1px solid rgba(255,210,150,0.1); padding-top:14px; margin-top:14px;">
+        <h3>Create asset</h3>
+        <div class="row">
+          <div><label>Asset tag *</label><input id="a_tag" /></div>
+          <div><label>Name *</label><input id="a_name" /></div>
+        </div>
+        <label>Description</label>
+        <textarea id="a_description"></textarea>
+        <div class="row">
+          <div><label>Institution *</label><input id="a_institution" /></div>
+          <div><label>Site *</label><input id="a_site" /></div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Category</label>
+            <select id="a_category">
+              <option>EQUIPMENT</option>
+              <option>BOOK</option>
+              <option>SPACE</option>
+            </select>
+          </div>
+          <div><label>Date acquired (YYYY-MM-DD)</label><input id="a_dateAcquired" placeholder="2024-01-15" /></div>
+        </div>
+        <button class="action" onclick="createAsset()">Create</button>
+        <button class="action secondary" onclick="toggleAddAsset()">Cancel</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Tag</th><th>Name</th><th>Institution</th><th>Site</th><th>Category</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="assetsTable">
+          <tr><td colspan="7" class="muted">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" id="assetDetailCard" style="display:none;">
+      <div class="flex-between">
+        <h2 id="detailTitle">Asset detail</h2>
+        <button class="action small secondary" onclick="closeDetail()">Close</button>
+      </div>
+      <div id="assetDetail"></div>
+    </div>
+
+    <div class="log" id="assetsLog"></div>
+  </section>
+
+  <!-- ============================ OVERDUE ============================ -->
+  <section class="panel" id="panel-overdue">
+    <div class="card">
+      <div class="flex-between">
+        <h2>Overdue assets</h2>
+        <button class="action small" onclick="loadOverdue()">Refresh</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Tag</th><th>Name</th><th>Institution</th><th>Site</th><th>Status</th></tr>
+        </thead>
+        <tbody id="overdueTable">
+          <tr><td colspan="5" class="muted">Click Refresh.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="log" id="overdueLog"></div>
+  </section>
+
+  <!-- ============================ INSTITUTIONS ============================ -->
+  <section class="panel" id="panel-institutions">
+    <div class="card">
+      <div class="flex-between">
+        <h2>Institutions</h2>
+        <button class="action small" onclick="toggleAddInst()">+ New institution</button>
+      </div>
+
+      <div id="addInstForm" style="display:none; border-top:1px solid rgba(255,210,150,0.1); padding-top:14px; margin-top:14px;">
+        <h3>Create institution</h3>
+        <div class="row">
+          <div><label>Institution ID *</label><input id="i_id" /></div>
+          <div><label>Name *</label><input id="i_name" /></div>
+        </div>
+        <label>Sites (comma-separated)</label>
+        <input id="i_sites" placeholder="Main Campus, North Campus" />
+        <button class="action" onclick="createInstitution()">Create</button>
+        <button class="action secondary" onclick="toggleAddInst()">Cancel</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>Sites</th><th></th></tr>
+        </thead>
+        <tbody id="instTable">
+          <tr><td colspan="4" class="muted">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="log" id="instLog"></div>
+  </section>
+
+</main>
+
+<script>
+// ============================ Utilities ============================
+const $ = (id) => document.getElementById(id);
+function base() { return $("baseUrl").value.replace(/\/$/, ""); }
+
+function log(elId, msg, isError = false) {
+  const el = $(elId);
+  const time = new Date().toLocaleTimeString();
+  el.textContent = `[${time}] ${msg}\n` + el.textContent;
+  el.style.color = isError ? "#fca5a5" : "#ffd9a0";
+}
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+  };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const res = await fetch(base() + path, opts);
+  const text = await res.text();
+  let data = null;
+  if (text) { try { data = JSON.parse(text); } catch { data = text; } }
+  if (!res.ok) {
+    const msg = (data && data.message) ? data.message : `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+function badge(status) { return `<span class="badge ${status}">${status}</span>`; }
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+// ============================ Navigation ============================
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    $("panel-" + btn.dataset.panel).classList.add("active");
+  });
+});
+
+// ============================ ASSETS ============================
+async function loadAssets() {
+  const tbody = $("assetsTable");
+  tbody.innerHTML = `<tr><td colspan="7" class="muted">Loading…</td></tr>`;
+  const params = new URLSearchParams();
+  const inst = $("filterInstitution").value.trim();
+  const site = $("filterSite").value.trim();
+  if (inst) params.set("institution", inst);
+  if (site) params.set("site", site);
+  const qs = params.toString();
+  try {
+    const assets = await api("GET", "/assets" + (qs ? "?" + qs : ""));
+    renderAssets(assets);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">Error: ${escapeHtml(e.message)}</td></tr>`;
+    log("assetsLog", "Failed to load assets: " + e.message, true);
+  }
+}
+
+function renderAssets(assets) {
+  const tbody = $("assetsTable");
+  if (!assets || assets.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">No assets found.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = assets.map(a => `
+    <tr>
+      <td><strong>${escapeHtml(a.assetTag)}</strong></td>
+      <td>${escapeHtml(a.name)}</td>
+      <td>${escapeHtml(a.institution)}</td>
+      <td>${escapeHtml(a.site)}</td>
+      <td>${escapeHtml(a.category)}</td>
+      <td>${badge(a.status)}</td>
+      <td style="white-space:nowrap;">
+        <button class="action small secondary" onclick="viewAsset('${escapeHtml(a.assetTag)}')">View</button>
+        ${a.status === "AVAILABLE"
+          ? `<button class="action small" onclick="loanAsset('${escapeHtml(a.assetTag)}')">Loan</button>`
+          : ""}
+        ${(a.status === "LOANED_OUT" || a.status === "OCCUPIED")
+          ? `<button class="action small" onclick="returnAsset('${escapeHtml(a.assetTag)}')">Return</button>`
+          : ""}
+        <button class="action small danger" onclick="deleteAsset('${escapeHtml(a.assetTag)}')">Delete</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function clearAssetFilter() {
+  $("filterInstitution").value = "";
+  $("filterSite").value = "";
+  loadAssets();
+}
+
+function toggleAddAsset() {
+  const f = $("addAssetForm");
+  f.style.display = f.style.display === "none" ? "block" : "none";
+}
+
+async function createAsset() {
+  const asset = {
+    assetTag: $("a_tag").value.trim(),
+    name: $("a_name").value.trim(),
+    description: $("a_description").value.trim(),
+    institution: $("a_institution").value.trim(),
+    site: $("a_site").value.trim(),
+    status: "AVAILABLE",
+    category: $("a_category").value,
+    dateAcquired: $("a_dateAcquired").value.trim(),
+    components: [],
+    schedules: [],
+    workOrders: [],
+  };
+  if (!asset.assetTag || !asset.name || !asset.institution || !asset.site) {
+    alert("assetTag, name, institution and site are required.");
+    return;
+  }
+  try {
+    await api("POST", "/assets", asset);
+    log("assetsLog", "Created asset " + asset.assetTag);
+    toggleAddAsset();
+    ["a_tag","a_name","a_description","a_institution","a_site","a_dateAcquired"]
+      .forEach(id => $(id).value = "");
+    loadAssets();
+  } catch (e) {
+    log("assetsLog", "Create failed: " + e.message, true);
+    alert("Create failed: " + e.message);
+  }
+}
+
+async function deleteAsset(tag) {
+  if (!confirm(`Delete asset ${tag}?`)) return;
+  try {
+    await api("DELETE", "/assets/" + encodeURIComponent(tag));
+    log("assetsLog", "Deleted asset " + tag);
+    loadAssets();
+  } catch (e) {
+    log("assetsLog", "Delete failed: " + e.message, true);
+  }
+}
+
+async function loanAsset(tag) {
+  try {
+    const a = await api("POST", `/assets/${encodeURIComponent(tag)}/loan`);
+    log("assetsLog", `Loaned/booked ${tag} → status: ${a.status}`);
+    loadAssets();
+  } catch (e) {
+    log("assetsLog", "Loan failed: " + e.message, true);
+  }
+}
+
+async function returnAsset(tag) {
+  try {
+    const a = await api("POST", `/assets/${encodeURIComponent(tag)}/return`);
+    log("assetsLog", `Returned ${tag} → status: ${a.status}`);
+    loadAssets();
+  } catch (e) {
+    log("assetsLog", "Return failed: " + e.message, true);
+  }
+}
+
+// ============================ ASSET DETAIL ============================
+async function viewAsset(tag) {
+  try {
+    const a = await api("GET", "/assets/" + encodeURIComponent(tag));
+    renderDetail(a);
+  } catch (e) {
+    log("assetsLog", "Load detail failed: " + e.message, true);
+  }
+}
+
+function closeDetail() { $("assetDetailCard").style.display = "none"; }
+
+function renderDetail(a) {
+  $("assetDetailCard").style.display = "block";
+  $("detailTitle").textContent = `${a.assetTag} — ${a.name}`;
+
+  const componentsHtml = a.components.length
+    ? `<ul class="sub-list">${a.components.map(c => `<li><strong>${escapeHtml(c.compId)}</strong> — ${escapeHtml(c.name)}: ${escapeHtml(c.description)} <button class="action small danger" onclick="deleteComponent('${escapeHtml(a.assetTag)}','${escapeHtml(c.compId)}')">✕</button></li>`).join("")}</ul>`
+    : `<span class="muted">none</span>`;
+
+  const schedulesHtml = a.schedules.length
+    ? `<ul class="sub-list">${a.schedules.map(s => `<li><strong>${escapeHtml(s.scheduleId)}</strong> — ${escapeHtml(s.type)} — due ${escapeHtml(s.dueDate)} — ${escapeHtml(s.description)} <button class="action small danger" onclick="deleteSchedule('${escapeHtml(a.assetTag)}','${escapeHtml(s.scheduleId)}')">✕</button></li>`).join("")}</ul>`
+    : `<span class="muted">none</span>`;
+
+  const workOrdersHtml = a.workOrders.length
+    ? `<ul class="sub-list">${a.workOrders.map(wo => `
+        <li>
+          <strong>${escapeHtml(wo.orderId)}</strong> [${escapeHtml(wo.status)}] — ${escapeHtml(wo.description)}
+          <button class="action small secondary" onclick="updateWorkOrderStatus('${escapeHtml(a.assetTag)}','${escapeHtml(wo.orderId)}')">Change status</button>
+          <button class="action small danger" onclick="deleteWorkOrder('${escapeHtml(a.assetTag)}','${escapeHtml(wo.orderId)}')">✕</button>
+          ${wo.tasks.length ? `<ul class="sub-list">${wo.tasks.map(t => `
+            <li>
+              <input type="checkbox" ${t.completed ? "checked" : ""} onchange="toggleTask('${escapeHtml(a.assetTag)}','${escapeHtml(wo.orderId)}','${escapeHtml(t.taskId)}', this.checked)">
+              ${escapeHtml(t.taskId)}: ${escapeHtml(t.description)}
+            </li>`).join("")}</ul>` : ""}
+          <button class="action small" onclick="addTask('${escapeHtml(a.assetTag)}','${escapeHtml(wo.orderId)}')">+ Task</button>
+        </li>`).join("")}</ul>`
+    : `<span class="muted">none</span>`;
+
+  $("assetDetail").innerHTML = `
+    <div class="detail-grid">
+      <div>Tag</div><div>${escapeHtml(a.assetTag)}</div>
+      <div>Name</div><div>${escapeHtml(a.name)}</div>
+      <div>Description</div><div>${escapeHtml(a.description)}</div>
+      <div>Category</div><div>${escapeHtml(a.category)}</div>
+      <div>Status</div><div>${badge(a.status)}</div>
+      <div>Institution</div><div>${escapeHtml(a.institution)}</div>
+      <div>Site</div><div>${escapeHtml(a.site)}</div>
+      <div>Date acquired</div><div>${escapeHtml(a.dateAcquired)}</div>
+    </div>
+
+    <h3>Components <button class="action small" onclick="addComponent('${escapeHtml(a.assetTag)}')">+ Add</button></h3>
+    ${componentsHtml}
+
+    <h3>Schedules <button class="action small" onclick="addSchedule('${escapeHtml(a.assetTag)}')">+ Add</button></h3>
+    ${schedulesHtml}
+
+    <h3>Work orders <button class="action small" onclick="addWorkOrder('${escapeHtml(a.assetTag)}')">+ Add</button></h3>
+    ${workOrdersHtml}
+  `;
+}
+
+// --- components ---
+async function addComponent(tag) {
+  const compId = prompt("Component ID:"); if (!compId) return;
+  const name = prompt("Name:"); if (name === null) return;
+  const description = prompt("Description:"); if (description === null) return;
+  try {
+    const a = await api("POST", `/assets/${encodeURIComponent(tag)}/components`, { compId, name, description });
+    log("assetsLog", `Added component ${compId} to ${tag}`);
+    renderDetail(a);
+  } catch (e) { log("assetsLog", "Add component failed: " + e.message, true); }
+}
+
+async function deleteComponent(tag, compId) {
+  if (!confirm(`Remove component ${compId}?`)) return;
+  try {
+    const a = await api("DELETE", `/assets/${encodeURIComponent(tag)}/components/${encodeURIComponent(compId)}`);
+    log("assetsLog", `Removed component ${compId}`);
+    renderDetail(a);
+  } catch (e) { log("assetsLog", "Remove component failed: " + e.message, true); }
+}
+
+// --- schedules ---
+async function addSchedule(tag) {
+  const scheduleId = prompt("Schedule ID:"); if (!scheduleId) return;
+  const type = prompt("Type (MAINTENANCE / BOOKING):", "MAINTENANCE"); if (type === null) return;
+  const dueDate = prompt("Due date (YYYY-MM-DD):"); if (!dueDate) return;
+  const description = prompt("Description:"); if (description === null) return;
+  try {
+    const a = await api("POST", `/assets/${encodeURIComponent(tag)}/schedules`, { scheduleId, type, dueDate, description });
+    log("assetsLog", `Added schedule ${scheduleId} to ${tag}`);
+    renderDetail(a);
+  } catch (e) { log("assetsLog", "Add schedule failed: " + e.message, true); }
+}
+
+async function deleteSchedule(tag, scheduleId) {
+  if (!confirm(`Remove schedule ${scheduleId}?`)) return;
+  try {
+    const a = await api("DELETE", `/assets/${encodeURIComponent(tag)}/schedules/${encodeURIComponent(scheduleId)}`);
+    log("assetsLog", `Removed schedule ${scheduleId}`);
+    renderDetail(a);
+  } catch (e) { log("assetsLog", "Remove schedule failed: " + e.message, true); }
+}
+
+// --- work orders ---
+async function addWorkOrder(tag) {
+  const orderId = prompt("Work order ID:"); if (!orderId) return;
+  const status = prompt("Status (OPEN / IN_PROGRESS / CLOSED):", "OPEN"); if (!status) return;
+  const description = prompt("Description:"); if (description === null) return;
+  try {
+    const a = await api("POST", `/assets/${encodeURIComponent(tag)}/workorders`, { orderId, status, description, tasks: [] });
+    log("assetsLog", `Added work order ${orderId}`);
+    renderDetail(a);
+  } catch (e) { log("assetsLog", "Add work order failed: " + e.message, true); }
+}
+
+async function updateWorkOrderStatus(tag, orderId) {
+  const status = prompt("New status (OPEN / IN_PROGRESS / CLOSED):");
+  if (!status) return;
+  try {
+    const a = await api("PUT", `/assets/${encodeURIComponent(tag)}/workorders/${encodeURIComponent(orderId)}`, { status });
+    log("assetsLog", `Updated work order ${orderId} → ${status}`);
+    renderDetail(a);
+  } catch (e) { log("assetsLog", "Update work order failed: " + e.message, true); }
+}
+
+async function deleteWorkOrder(tag, orderId) {
+  if (!confirm(`Delete work order ${orderId}?`)) return;
+  try {
+    const a = await api("DELETE", `/assets/${encodeURIComponent(tag)}/workorders/${encodeURIComponent(orderId)}`);
+    log("assetsLog", `Deleted work order ${orderId}`);
+    renderDetail(a);
+  } catch (e) { log("assetsLog", "Delete work order failed: " + e.message, true); }
+}
+
+async function addTask(tag, orderId) {
+  const taskId = prompt("Task ID:"); if (!taskId) return;
+  const description = prompt("Description:"); if (description === null) return;
+  try {
+    const a = await api("POST", `/assets/${encodeURIComponent(tag)}/workorders/${encodeURIComponent(orderId)}/tasks`, { taskId, description, completed: false });
+    log("assetsLog", `Added task ${taskId}`);
+    renderDetail(a);
+  } catch (e) { log("assetsLog", "Add task failed: " + e.message, true); }
+}
+
+async function toggleTask(tag, orderId, taskId, completed) {
+  try {
+    const a = await api("PUT", `/assets/${encodeURIComponent(tag)}/workorders/${encodeURIComponent(orderId)}/tasks/${encodeURIComponent(taskId)}`, { completed });
+    log("assetsLog", `Task ${taskId} → ${completed ? "done" : "not done"}`);
+    renderDetail(a);
+  } catch (e) { log("assetsLog", "Update task failed: " + e.message, true); }
+}
+
+// ============================ OVERDUE ============================
+async function loadOverdue() {
+  const tbody = $("overdueTable");
+  tbody.innerHTML = `<tr><td colspan="5" class="muted">Loading…</td></tr>`;
+  try {
+    const assets = await api("GET", "/assets/overdue");
+    if (!assets.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="muted">No overdue assets ✨</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = assets.map(a => `
+      <tr>
+        <td><strong>${escapeHtml(a.assetTag)}</strong></td>
+        <td>${escapeHtml(a.name)}</td>
+        <td>${escapeHtml(a.institution)}</td>
+        <td>${escapeHtml(a.site)}</td>
+        <td>${badge(a.status)}</td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="5" class="muted">Error: ${escapeHtml(e.message)}</td></tr>`;
+    log("overdueLog", "Load overdue failed: " + e.message, true);
+  }
+}
+
+// ============================ INSTITUTIONS ============================
+async function loadInstitutions() {
+  const tbody = $("instTable");
+  tbody.innerHTML = `<tr><td colspan="4" class="muted">Loading…</td></tr>`;
+  try {
+    const insts = await api("GET", "/institutions");
+    if (!insts.length) {
+      tbody.innerHTML = `<tr><td colspan="4" class="muted">No institutions found.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = insts.map(i => `
+      <tr>
+        <td><strong>${escapeHtml(i.institutionId)}</strong></td>
+        <td>${escapeHtml(i.name)}</td>
+        <td>${escapeHtml((i.sites || []).join(", "))}</td>
+        <td><button class="action small danger" onclick="deleteInstitution('${escapeHtml(i.institutionId)}')">Delete</button></td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4" class="muted">Error: ${escapeHtml(e.message)}</td></tr>`;
+    log("instLog", "Load institutions failed: " + e.message, true);
+  }
+}
+
+function toggleAddInst() {
+  const f = $("addInstForm");
+  f.style.display = f.style.display === "none" ? "block" : "none";
+}
+
+async function createInstitution() {
+  const id = $("i_id").value.trim();
+  const name = $("i_name").value.trim();
+  const sitesRaw = $("i_sites").value.trim();
+  const sites = sitesRaw ? sitesRaw.split(",").map(s => s.trim()).filter(Boolean) : [];
+  if (!id || !name) { alert("ID and name are required."); return; }
+  try {
+    await api("POST", "/institutions", { institutionId: id, name, sites });
+    log("instLog", "Created institution " + id);
+    toggleAddInst();
+    ["i_id","i_name","i_sites"].forEach(k => $(k).value = "");
+    loadInstitutions();
+  } catch (e) {
+    log("instLog", "Create failed: " + e.message, true);
+    alert("Create failed: " + e.message);
+  }
+}
+
+async function deleteInstitution(id) {
+  if (!confirm(`Delete institution ${id}?`)) return;
+  try {
+    await api("DELETE", "/institutions/" + encodeURIComponent(id));
+    log("instLog", "Deleted institution " + id);
+    loadInstitutions();
+  } catch (e) {
+    log("instLog", "Delete failed: " + e.message, true);
+  }
+}
+
+// ============================ Init ============================
+loadAssets();
+loadInstitutions();
+</script>
+</body>
+</html>
