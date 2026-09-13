@@ -10,6 +10,8 @@ Team Members
 2. Jimu Erol Halifeli 221042792
 3. Jayden Aljandro Claassen 224085832
 4. Benhard Amutse 224061887
+5. Naikuti Nambinga 224016288
+6. Paulus Negumbo 224081799
 
 
 Overview
