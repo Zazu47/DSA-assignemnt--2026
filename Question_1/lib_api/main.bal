@@ -15,9 +15,8 @@ listener http:Listener libListener = new (8080);
 
 service /api on libListener {
 
-    // ==================== ASSET CRUD ====================
+    // ASSET CRUD 
 
-    // POST /api/assets
     resource function post assets(@http:Payload Asset newAsset) returns Asset|http:Conflict|http:BadRequest {
         if assetStore.hasKey(newAsset.assetTag) {
             return <http:Conflict>{
@@ -29,7 +28,6 @@ service /api on libListener {
         return newAsset;
     }
 
-    // GET /api/assets?institution=X&site=Y
     resource function get assets(string? institution, string? site) returns Asset[] {
         Asset[] result = assetStore.toArray();
 
@@ -45,8 +43,6 @@ service /api on libListener {
         }
         return result;
     }
-
-    // GET /api/assets/overdue
     resource function get assets/overdue() returns Asset[] {
         time:Civil nowCivil = time:utcToCivil(time:utcNow());
         Asset[] overdueAssets = [];
@@ -66,7 +62,6 @@ service /api on libListener {
         return overdueAssets;
     }
 
-    // GET /api/assets/{assetTag}
     resource function get assets/[string assetTag]() returns Asset|http:NotFound {
         Asset? found = assetStore[assetTag];
         if found is Asset {
@@ -75,8 +70,7 @@ service /api on libListener {
         return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
     }
 
-    // PUT /api/assets/{assetTag}
-    resource function put assets/[string assetTag](@http:Payload Asset updatedAsset) returns Asset|http:NotFound|http:BadRequest {
+        resource function put assets/[string assetTag](@http:Payload Asset updatedAsset) returns Asset|http:NotFound|http:BadRequest {
         if !assetStore.hasKey(assetTag) {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
         }
@@ -88,7 +82,6 @@ service /api on libListener {
         return updatedAsset;
     }
 
-    // DELETE /api/assets/{assetTag}
     resource function delete assets/[string assetTag]() returns http:Ok|http:NotFound {
         if !assetStore.hasKey(assetTag) {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
@@ -98,9 +91,8 @@ service /api on libListener {
         return <http:Ok>{body: {message: "Asset " + assetTag + " deleted."}};
     }
 
-    // ==================== LOANING / BOOKING ====================
-
-    // POST /api/assets/{assetTag}/loan
+    //  LOANING / BOOKING 
+  
     resource function post assets/[string assetTag]/loan() returns Asset|http:NotFound|http:Conflict {
         Asset? found = assetStore[assetTag];
         if found is () {
@@ -121,8 +113,7 @@ service /api on libListener {
         return found;
     }
 
-    // POST /api/assets/{assetTag}/return
-    resource function post assets/[string assetTag]/'return() returns Asset|http:NotFound|http:Conflict {
+       resource function post assets/[string assetTag]/'return() returns Asset|http:NotFound|http:Conflict {
         Asset? found = assetStore[assetTag];
         if found is () {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
@@ -135,10 +126,9 @@ service /api on libListener {
         return found;
     }
 
-    // ==================== COMPONENTS ====================
+    //  COMPONENTS 
 
-    // POST /api/assets/{assetTag}/components
-    resource function post assets/[string assetTag]/components(@http:Payload Component newComp) returns Asset|http:NotFound|http:Conflict {
+        resource function post assets/[string assetTag]/components(@http:Payload Component newComp) returns Asset|http:NotFound|http:Conflict {
         Asset? found = assetStore[assetTag];
         if found is () {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
@@ -152,8 +142,7 @@ service /api on libListener {
         return found;
     }
 
-    // DELETE /api/assets/{assetTag}/components/{compId}
-    resource function delete assets/[string assetTag]/components/[string compId]() returns Asset|http:NotFound {
+       resource function delete assets/[string assetTag]/components/[string compId]() returns Asset|http:NotFound {
         Asset? found = assetStore[assetTag];
         if found is () {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
@@ -164,10 +153,8 @@ service /api on libListener {
         return found;
     }
 
-    // ==================== SCHEDULES ====================
-
-    // POST /api/assets/{assetTag}/schedules
-    resource function post assets/[string assetTag]/schedules(@http:Payload Schedule newSched) returns Asset|http:NotFound|http:Conflict {
+    // SCHEDULES 
+      resource function post assets/[string assetTag]/schedules(@http:Payload Schedule newSched) returns Asset|http:NotFound|http:Conflict {
         Asset? found = assetStore[assetTag];
         if found is () {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
@@ -181,8 +168,7 @@ service /api on libListener {
         return found;
     }
 
-    // DELETE /api/assets/{assetTag}/schedules/{scheduleId}
-    resource function delete assets/[string assetTag]/schedules/[string scheduleId]() returns Asset|http:NotFound {
+        resource function delete assets/[string assetTag]/schedules/[string scheduleId]() returns Asset|http:NotFound {
         Asset? found = assetStore[assetTag];
         if found is () {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
@@ -193,9 +179,8 @@ service /api on libListener {
         return found;
     }
 
-    // ==================== WORK ORDERS ====================
+    //WORK ORDERS
 
-    // POST /api/assets/{assetTag}/workorders
     resource function post assets/[string assetTag]/workorders(@http:Payload WorkOrder newWO) returns Asset|http:NotFound|http:Conflict {
         Asset? found = assetStore[assetTag];
         if found is () {
@@ -210,8 +195,7 @@ service /api on libListener {
         return found;
     }
 
-    // PUT /api/assets/{assetTag}/workorders/{orderId}  (update status: OPEN/IN_PROGRESS/CLOSED)
-    resource function put assets/[string assetTag]/workorders/[string orderId](@http:Payload StatusUpdate upd) returns Asset|http:NotFound {
+      resource function put assets/[string assetTag]/workorders/[string orderId](@http:Payload StatusUpdate upd) returns Asset|http:NotFound {
         Asset? found = assetStore[assetTag];
         if found is () {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
@@ -229,8 +213,7 @@ service /api on libListener {
         return found;
     }
 
-    // DELETE /api/assets/{assetTag}/workorders/{orderId}
-    resource function delete assets/[string assetTag]/workorders/[string orderId]() returns Asset|http:NotFound {
+      resource function delete assets/[string assetTag]/workorders/[string orderId]() returns Asset|http:NotFound {
         Asset? found = assetStore[assetTag];
         if found is () {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
@@ -241,8 +224,7 @@ service /api on libListener {
         return found;
     }
 
-    // POST /api/assets/{assetTag}/workorders/{orderId}/tasks
-    resource function post assets/[string assetTag]/workorders/[string orderId]/tasks(@http:Payload WorkOrderTask newTask) returns Asset|http:NotFound {
+     resource function post assets/[string assetTag]/workorders/[string orderId]/tasks(@http:Payload WorkOrderTask newTask) returns Asset|http:NotFound {
         Asset? found = assetStore[assetTag];
         if found is () {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
@@ -260,8 +242,7 @@ service /api on libListener {
         return found;
     }
 
-    // PUT /api/assets/{assetTag}/workorders/{orderId}/tasks/{taskId}  (mark complete/incomplete)
-    resource function put assets/[string assetTag]/workorders/[string orderId]/tasks/[string taskId](@http:Payload TaskUpdate upd) returns Asset|http:NotFound {
+      resource function put assets/[string assetTag]/workorders/[string orderId]/tasks/[string taskId](@http:Payload TaskUpdate upd) returns Asset|http:NotFound {
         Asset? found = assetStore[assetTag];
         if found is () {
             return <http:NotFound>{body: {message: "Asset " + assetTag + " not found."}};
@@ -283,9 +264,8 @@ service /api on libListener {
         return found;
     }
 
-    // ==================== INSTITUTIONS ====================
+    // INSTITUTIONS 
 
-    // POST /api/institutions
     resource function post institutions(@http:Payload Institution newInst) returns Institution|http:Conflict {
         if institutionStore.hasKey(newInst.institutionId) {
             return <http:Conflict>{body: {message: "Institution " + newInst.institutionId + " already exists."}};
@@ -294,12 +274,10 @@ service /api on libListener {
         return newInst;
     }
 
-    // GET /api/institutions
-    resource function get institutions() returns Institution[] {
+       resource function get institutions() returns Institution[] {
         return institutionStore.toArray();
     }
 
-    // GET /api/institutions/{institutionId}
     resource function get institutions/[string institutionId]() returns Institution|http:NotFound {
         Institution? found = institutionStore[institutionId];
         if found is Institution {
@@ -308,7 +286,6 @@ service /api on libListener {
         return <http:NotFound>{body: {message: "Institution " + institutionId + " not found."}};
     }
 
-    // PUT /api/institutions/{institutionId}
     resource function put institutions/[string institutionId](@http:Payload Institution updatedInst) returns Institution|http:NotFound|http:BadRequest {
         if !institutionStore.hasKey(institutionId) {
             return <http:NotFound>{body: {message: "Institution " + institutionId + " not found."}};
@@ -321,8 +298,7 @@ service /api on libListener {
         return updatedInst;
     }
 
-    // DELETE /api/institutions/{institutionId}
-    resource function delete institutions/[string institutionId]() returns http:Ok|http:NotFound {
+      resource function delete institutions/[string institutionId]() returns http:Ok|http:NotFound {
         if !institutionStore.hasKey(institutionId) {
             return <http:NotFound>{body: {message: "Institution " + institutionId + " not found."}};
         }

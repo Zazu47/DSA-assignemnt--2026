@@ -8,8 +8,6 @@ public enum Status {
     DISPOSED
 }
 
-// Distinguishes books/equipment (LOANED_OUT when checked out) from
-// physical spaces like labs/meeting rooms (OCCUPIED when booked).
 public enum AssetCategory {
     BOOK,
     EQUIPMENT,
@@ -24,8 +22,8 @@ public type Component record {|
 
 public type Schedule record {|
     string scheduleId;
-    string 'type; // "MAINTENANCE", "BOOKING", etc.
-    string dueDate; // ISO date string YYYY-MM-DD
+    string 'type; 
+    string dueDate;
     string description;
 |};
 
@@ -37,7 +35,7 @@ public type WorkOrderTask record {|
 
 public type WorkOrder record {|
     string orderId;
-    string status; // "OPEN", "IN_PROGRESS", "CLOSED"
+    string status; 
     string description;
     WorkOrderTask[] tasks = [];
 |};
