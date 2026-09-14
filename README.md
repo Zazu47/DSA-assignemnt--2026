@@ -12,6 +12,7 @@ Team Members
 4. Benhard Amutse 224061887
 5. Naikuti Nambinga 224016288
 6. Paulus Negumbo 224081799
+7. El-Salvador Pashita 223057606
 
 
 Overview
