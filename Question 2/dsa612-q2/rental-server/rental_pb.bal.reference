@@ -1,0 +1,91 @@
+// rental_pb.bal.reference
+//
+// NOT compiled on purpose (the .reference extension keeps bal from picking
+// it up). This is here so you can see what the fields look like at a
+// glance. The REAL version of this file gets created for you the first
+// time you run:
+//   bal grpc --input ../proto/rental.proto --output .
+// from inside this folder (see step 4 of the README). That command reads
+// rental.proto and generates the actual rental_pb.bal with the exact same
+// record shapes shown below, plus the descriptor constant that service.bal
+// needs to start up.
+
+public type UserProfile record {|
+    string userId = "";
+    string fullName = "";
+    string role = "";
+    string region = "";
+|};
+
+public type UserBatchConfirmation record {|
+    int usersRegistered = 0;
+    string message = "";
+|};
+
+public type PropertyRequest record {|
+    string hostId = "";
+    string propertyName = "";
+    string location = "";
+    string propertyType = "";
+    float pricePerNight = 0.0;
+    string status = "";
+|};
+
+public type PropertyResponse record {|
+    string propertyId = "";
+    string hostId = "";
+    string propertyName = "";
+    string location = "";
+    string propertyType = "";
+    float pricePerNight = 0.0;
+    string status = "";
+|};
+
+public type UpdatePropertyRequest record {|
+    string propertyId = "";
+    float pricePerNight = 0.0;
+    string status = "";
+|};
+
+public type RemovePropertyRequest record {|
+    string propertyId = "";
+    string hostId = "";
+|};
+
+public type PropertyList record {|
+    PropertyResponse[] properties = [];
+|};
+
+public type PropertyFilter record {|
+    string location = "";
+    float maxPrice = 0.0;
+|};
+
+public type PropertyLookup record {|
+    string propertyId = "";
+|};
+
+public type BookingRequest record {|
+    string guestId = "";
+    string propertyId = "";
+    string checkIn = "";
+    string checkOut = "";
+|};
+
+public type BookingCartResponse record {|
+    boolean accepted = false;
+    string cartId = "";
+    string message = "";
+|};
+
+public type ConfirmBookingRequest record {|
+    string cartId = "";
+|};
+
+public type BookingConfirmation record {|
+    string bookingId = "";
+    string propertyId = "";
+    string guestId = "";
+    float totalCost = 0.0;
+    string message = "";
+|};
