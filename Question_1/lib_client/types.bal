@@ -1,36 +1,24 @@
-// types.bal
+// types.bal - same shapes as the API side, just what the client needs to
+// print things out and build requests.
 
-public enum Status {
-    AVAILABLE,
-    LOANED_OUT,
-    OCCUPIED,
-    UNDER_MAINTENANCE,
-    DISPOSED
-}
-
-public enum AssetCategory {
-    BOOK,
-    EQUIPMENT,
-    SPACE
-}
-
-public type Component record {|
+public type AssetComponent record {|
     string compId;
     string name;
     string description;
 |};
 
-public type Schedule record {|
+public type AssetSchedule record {|
     string scheduleId;
     string 'type;
     string dueDate;
     string description;
+    boolean completed = false;
 |};
 
 public type WorkOrderTask record {|
     string taskId;
     string description;
-    boolean completed = false;
+    boolean done = false;
 |};
 
 public type WorkOrder record {|
@@ -40,26 +28,22 @@ public type WorkOrder record {|
     WorkOrderTask[] tasks = [];
 |};
 
+public type LoanInfo record {|
+    string borrower;
+    string borrowedOn;
+    string dueBack;
+|};
+
 public type Asset record {|
     string assetTag;
     string name;
     string description;
     string institution;
     string site;
-    Status status;
-    AssetCategory category = EQUIPMENT;
+    string status;
     string dateAcquired;
-    Component[] components = [];
-    Schedule[] schedules = [];
+    AssetComponent[] components = [];
+    AssetSchedule[] schedules = [];
     WorkOrder[] workOrders = [];
+    LoanInfo? loan = ();
 |};
-
-public type Institution record {|
-    string institutionId;
-    string name;
-    string[] sites = [];
-|};
-
-public type MessageResponse record {
-    string message;
-};
