@@ -13,7 +13,7 @@ Team Members
 5. Naikuti Nambinga 224016288
 6. Paulus Negumbo 224081799
 7. El-Salvador Pashita 223057606
-
+8. Opomanga Kavela 224064827
 
 Overview
 This repository contains two distributed systems:
